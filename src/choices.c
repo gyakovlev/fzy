@@ -187,7 +187,7 @@ static void *choices_search_worker(void *data) {
 		for(size_t i = start; i < end; i++) {
 			if (has_match(job->search, c->strings[i])) {
 				w->results[w->available].str = c->strings[i];
-				w->results[w->available].score = match(job->search, c->strings[i]);
+				/* w->results[w->available].score = match(job->search, c->strings[i]); */
 				w->available++;
 			}
 		}
@@ -243,7 +243,7 @@ void choices_search(choices_t *c, const char *search) {
 	free(workers);
 
 	if(*search) {
-		qsort(c->results, c->available, sizeof(struct scored_result), cmpchoice);
+		/* qsort(c->results, c->available, sizeof(struct scored_result), cmpchoice); */
 	}
 }
 
