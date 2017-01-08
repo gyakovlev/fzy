@@ -141,7 +141,7 @@ size_t choices_available(choices_t *c) {
 #define BATCH_SIZE 512
 
 struct search_job {
-	pthread_mutex_t lock;
+	pthread_spinlock_t lock;
 	choices_t *choices;
 	const char *search;
 	size_t processed;
@@ -156,7 +156,7 @@ struct worker {
 };
 
 static void worker_get_next_batch(struct search_job *job, size_t *start, size_t *end) {
-	pthread_mutex_lock(&job->lock);
+	pthread_spin_lock(&job->lock);
 
 	*start = job->processed;
 
@@ -167,7 +167,7 @@ static void worker_get_next_batch(struct search_job *job, size_t *start, size_t 
 
 	*end = job->processed;
 
-	pthread_mutex_unlock(&job->lock);
+	pthread_spin_unlock(&job->lock);
 }
 
 static void *choices_search_worker(void *data) {
@@ -202,7 +202,7 @@ void choices_search(choices_t *c, const char *search) {
 	struct search_job *job = calloc(1, sizeof(struct search_job));
 	job->search = search;
 	job->choices = c;
-	if (pthread_mutex_init(&job->lock, NULL) != 0) {
+	if (pthread_spin_init(&job->lock, PTHREAD_PROCESS_PRIVATE) != 0) {
 		fprintf(stderr, "Error: pthread_mutex_init failed\n");
 		abort();
 	}
@@ -239,7 +239,7 @@ void choices_search(choices_t *c, const char *search) {
 		free(w->results);
 	}
 
-	pthread_mutex_destroy(&job->lock);
+	pthread_spin_destroy(&job->lock);
 	free(workers);
 
 	if(*search) {
